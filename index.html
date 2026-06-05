@@ -673,6 +673,26 @@ header {
 .email-banner-text { flex: 1; font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .email-banner-edit { font-size: 12px; color: var(--accent); font-weight: 600; flex-shrink: 0; }
 
+/* ── DUE DATE ── */
+.due-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.due-badge.overdue  { background: rgba(239,68,68,0.15); color: #ef4444; }
+.due-badge.today    { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.due-badge.upcoming { background: rgba(99,102,241,0.12); color: var(--accent); }
+.due-badge.future   { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); }
+
+.form-input[type="date"] { color-scheme: dark; }
+[data-theme="apple"] .form-input[type="date"],
+[data-theme="material"] .form-input[type="date"],
+[data-theme="salesforce"] .form-input[type="date"] { color-scheme: light; }
+
 /* ── NLM FAB ── */
 .nlm-fab {
   width: 56px; height: 56px;
@@ -846,6 +866,11 @@ header {
     </div>
 
     <div class="form-group">
+      <label class="form-label">期限（任意）</label>
+      <input class="form-input" id="add-due" type="date">
+    </div>
+
+    <div class="form-group">
       <label class="form-label">メモ（任意）</label>
       <textarea class="form-textarea" id="add-notes" placeholder="詳細や補足情報…"></textarea>
     </div>
@@ -946,6 +971,11 @@ header {
           <span class="cat-icon">🏠</span>プライベート
         </div>
       </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">期限（任意）</label>
+      <input class="form-input" id="edit-due" type="date">
     </div>
 
     <div class="form-group">
@@ -1220,6 +1250,7 @@ function render() {
         <div class="todo-meta">
           <span class="badge ${t.category}">${t.category === 'work' ? '💼 仕事' : '🏠 プライベート'}</span>
           <span class="todo-date">${dateStr}</span>
+          ${getDueBadge(t.due)}
         </div>
       </div>
       <div class="todo-actions">
@@ -1235,6 +1266,20 @@ function getFiltered() {
   if (filter === 'all') return todos.filter(t => !t.done);
   if (filter === 'done') return todos.filter(t => t.done);
   return todos.filter(t => t.category === filter && !t.done);
+}
+
+function getDueBadge(due) {
+  if (!due) return '';
+  const today = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const dueDate = new Date(due + 'T00:00:00');
+  const todayDate = new Date(today + 'T00:00:00');
+  const diffDays = Math.round((dueDate - todayDate) / 86400000);
+
+  if (diffDays < 0)  return `<span class="due-badge overdue">🔴 期限切れ ${due}</span>`;
+  if (diffDays === 0) return `<span class="due-badge today">🟡 今日まで</span>`;
+  if (diffDays <= 3)  return `<span class="due-badge upcoming">🔵 あと${diffDays}日</span>`;
+  return `<span class="due-badge future">📅 ${due}</span>`;
 }
 
 function escHtml(s) {
@@ -1274,6 +1319,7 @@ function toggleSelectAll() {
 function openAddModal() {
   document.getElementById('add-title').value = '';
   document.getElementById('add-notes').value = '';
+  document.getElementById('add-due').value = '';
   setCategory('work');
   openModal('add-modal');
   setTimeout(() => document.getElementById('add-title').focus(), 300);
@@ -1293,6 +1339,7 @@ function addTodo() {
     title,
     notes: document.getElementById('add-notes').value.trim(),
     category: addCategory,
+    due: document.getElementById('add-due').value || null,
     done: false,
     createdAt: Date.now()
   };
@@ -1310,6 +1357,7 @@ function openEditModal(e, id) {
   document.getElementById('edit-id').value = t.id;
   document.getElementById('edit-title').value = t.title;
   document.getElementById('edit-notes').value = t.notes || '';
+  document.getElementById('edit-due').value = t.due || '';
   setEditCategory(t.category);
   openModal('edit-modal');
   setTimeout(() => document.getElementById('edit-title').focus(), 300);
@@ -1332,6 +1380,7 @@ function saveEdit() {
   if (!t) return;
   t.title = title;
   t.notes = document.getElementById('edit-notes').value.trim();
+  t.due = document.getElementById('edit-due').value || null;
   t.category = cat;
   save();
   closeModal('edit-modal');
