@@ -671,6 +671,75 @@ header {
 .email-banner-text { flex: 1; font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .email-banner-edit { font-size: 12px; color: var(--accent); font-weight: 600; flex-shrink: 0; }
 
+/* ── NLM FAB ── */
+.nlm-fab {
+  width: 56px; height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #10b981, #0891b2);
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(16,185,129,0.35);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nlm-fab:active { transform: scale(0.9); }
+
+/* ── NLM MODAL ── */
+.nlm-drop-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: var(--bg-card);
+}
+.nlm-drop-area:hover { border-color: var(--accent); background: rgba(99,102,241,0.04); }
+.nlm-drop-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.nlm-drop-icon { font-size: 40px; margin-bottom: 10px; }
+.nlm-drop-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.nlm-drop-sub { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+.nlm-files { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.nlm-file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nlm-file-card.selected { border-color: var(--border-active); background: rgba(99,102,241,0.08); }
+.nlm-file-card:active { transform: scale(0.98); }
+.nlm-file-icon { font-size: 28px; flex-shrink: 0; }
+.nlm-file-info { flex: 1; min-width: 0; }
+.nlm-file-name { font-size: 14px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nlm-file-size { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.nlm-file-check { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+.nlm-file-card.selected .nlm-file-check { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; }
+.nlm-file-card.selected .nlm-file-check svg { display: block; }
+.nlm-file-check svg { display: none; }
+
+.nlm-hint {
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.nlm-hint strong { color: #10b981; }
+
 /* ── PROGRESS BAR (top) ── */
 #progress-bar {
   position: fixed;
@@ -745,6 +814,7 @@ header {
     <span>📤</span>
     <span id="send-fab-label">送信</span>
   </button>
+  <button class="nlm-fab" id="nlm-fab" onclick="openNlmModal()" title="NLMファイル送信">NLM</button>
 </div>
 
 <!-- TOAST -->
@@ -781,6 +851,56 @@ header {
     <div class="btn-row">
       <button class="btn btn-ghost" onclick="closeModal('add-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="addTodo()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NLM FILE SEND MODAL ===== -->
+<div class="modal-overlay" id="nlm-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span class="icon">📊</span>NLM ファイル送信</div>
+
+    <div class="nlm-hint">
+      <strong>使い方：</strong> NotebookLMで生成したPPT・PDFをiPhoneの「ファイル」アプリに保存し、下のボタンから選択してください。iCloud Driveにあるファイルも選べます。
+    </div>
+
+    <div class="nlm-drop-area" id="nlm-drop-area">
+      <input type="file" id="nlm-file-input" accept=".pdf,.ppt,.pptx" multiple onchange="handleNlmFiles(this.files)">
+      <div class="nlm-drop-icon">📂</div>
+      <div class="nlm-drop-title">ファイルを選択</div>
+      <div class="nlm-drop-sub">タップして「ファイル」アプリを開く<br>iCloud Drive・ダウンロード等から選択可</div>
+    </div>
+
+    <div class="nlm-files" id="nlm-file-list"></div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">送信先メールアドレス</label>
+      <input class="form-input" id="nlm-send-to" type="email" placeholder="recipient@example.com">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">件名</label>
+      <input class="form-input" id="nlm-subject" type="text" placeholder="NotebookLM 資料">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">送信元アカウント</label>
+      <div class="sender-toggle">
+        <button class="sender-btn active" id="nlm-sender-gmail" onclick="setNlmSender('gmail')">
+          <span>📧</span> Gmail
+        </button>
+        <button class="sender-btn" id="nlm-sender-yahoo" onclick="setNlmSender('yahoo')">
+          <span>📬</span> Yahoo
+        </button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('nlm-modal')">キャンセル</button>
+      <button class="btn btn-send" id="nlm-send-btn" onclick="sendNlmEmail()">
+        <span id="nlm-send-btn-text">送信する</span>
+      </button>
     </div>
   </div>
 </div>
@@ -1319,6 +1439,149 @@ async function sendEmail() {
     selectedIds.clear();
     attachedFiles = [];
     render();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ 送信失敗: ' + (err.text || err.message || '不明なエラー'));
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '送信する';
+    setTimeout(() => setProgress(0), 600);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  NLM FILE SEND
+// ══════════════════════════════════════════════
+let nlmFiles = [];
+let nlmSelectedIndexes = new Set();
+let nlmActiveSender = 'gmail';
+
+function openNlmModal() {
+  nlmFiles = [];
+  nlmSelectedIndexes = new Set();
+  nlmActiveSender = 'gmail';
+  document.getElementById('nlm-file-input').value = '';
+  document.getElementById('nlm-file-list').innerHTML = '';
+  document.getElementById('nlm-drop-area').style.display = '';
+  document.getElementById('nlm-send-to').value = config.defaultTo || '';
+  document.getElementById('nlm-subject').value = 'NotebookLM 資料';
+  document.getElementById('nlm-sender-gmail').classList.add('active');
+  document.getElementById('nlm-sender-yahoo').classList.remove('active');
+  openModal('nlm-modal');
+}
+
+function handleNlmFiles(files) {
+  for (const f of files) nlmFiles.push(f);
+  if (nlmFiles.length > 0) {
+    document.getElementById('nlm-drop-area').style.display = 'none';
+  }
+  renderNlmFiles();
+}
+
+function renderNlmFiles() {
+  const container = document.getElementById('nlm-file-list');
+  if (nlmFiles.length === 0) {
+    container.innerHTML = '';
+    document.getElementById('nlm-drop-area').style.display = '';
+    return;
+  }
+  container.innerHTML = nlmFiles.map((f, i) => {
+    const sel = nlmSelectedIndexes.has(i);
+    const icon = f.name.endsWith('.pdf') ? '📄' : '📊';
+    const size = f.size > 1024*1024
+      ? (f.size/1024/1024).toFixed(1) + ' MB'
+      : (f.size/1024).toFixed(0) + ' KB';
+    return `
+    <div class="nlm-file-card ${sel ? 'selected' : ''}" onclick="toggleNlmFile(${i})">
+      <div class="nlm-file-icon">${icon}</div>
+      <div class="nlm-file-info">
+        <div class="nlm-file-name">${escHtml(f.name)}</div>
+        <div class="nlm-file-size">${size}</div>
+      </div>
+      <div class="nlm-file-check">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <button class="btn btn-ghost" style="margin-top:4px;font-size:12px;padding:6px;" onclick="addMoreNlmFiles()">＋ 別のファイルを追加</button>`;
+  }).join('');
+  // 追加ボタンは一番下に1つだけ
+  container.innerHTML = nlmFiles.map((f, i) => {
+    const sel = nlmSelectedIndexes.has(i);
+    const icon = f.name.endsWith('.pdf') ? '📄' : '📊';
+    const size = f.size > 1024*1024
+      ? (f.size/1024/1024).toFixed(1) + ' MB'
+      : (f.size/1024).toFixed(0) + ' KB';
+    return `
+    <div class="nlm-file-card ${sel ? 'selected' : ''}" onclick="toggleNlmFile(${i})">
+      <div class="nlm-file-icon">${icon}</div>
+      <div class="nlm-file-info">
+        <div class="nlm-file-name">${escHtml(f.name)}</div>
+        <div class="nlm-file-size">${size}</div>
+      </div>
+      <div class="nlm-file-check">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>`;
+  }).join('') + `<button class="btn btn-ghost" style="font-size:12px;padding:8px;" onclick="addMoreNlmFiles()">＋ 別のファイルを追加</button>`;
+}
+
+function toggleNlmFile(i) {
+  if (nlmSelectedIndexes.has(i)) nlmSelectedIndexes.delete(i);
+  else nlmSelectedIndexes.add(i);
+  renderNlmFiles();
+}
+
+function addMoreNlmFiles() {
+  document.getElementById('nlm-file-input').click();
+}
+
+function setNlmSender(sender) {
+  nlmActiveSender = sender;
+  document.getElementById('nlm-sender-gmail').classList.toggle('active', sender === 'gmail');
+  document.getElementById('nlm-sender-yahoo').classList.toggle('active', sender === 'yahoo');
+}
+
+async function sendNlmEmail() {
+  const to = document.getElementById('nlm-send-to').value.trim();
+  const subject = document.getElementById('nlm-subject').value.trim() || 'NotebookLM 資料';
+  const selected = [...nlmSelectedIndexes].map(i => nlmFiles[i]);
+
+  if (!to) { showToast('送信先メールを入力してください'); return; }
+  if (selected.length === 0) { showToast('ファイルを選択してください'); return; }
+  if (!config.publicKey) { showToast('⚙️ EmailJS設定が必要です'); openSettings(); return; }
+
+  const serviceId = nlmActiveSender === 'gmail' ? config.gmailService : config.yahooService;
+  if (!serviceId) { showToast(`${nlmActiveSender === 'gmail' ? 'Gmail' : 'Yahoo'} のService IDが未設定です`); return; }
+
+  const btn = document.getElementById('nlm-send-btn');
+  const btnText = document.getElementById('nlm-send-btn-text');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span>';
+  setProgress(0.3);
+
+  try {
+    const fileContents = await Promise.all(selected.map(f => fileToBase64(f)));
+    const params = {
+      to_email: to,
+      subject,
+      message: `NotebookLM 資料をお送りします。\n\n添付ファイル：\n${selected.map(f => '・' + f.name).join('\n')}`
+    };
+    fileContents.forEach((b64, i) => {
+      params[`attachment_${i+1}`] = b64;
+      params[`attachment_name_${i+1}`] = selected[i].name;
+    });
+    params.file_names = selected.map(f => f.name).join(', ');
+
+    emailjs.init({ publicKey: config.publicKey });
+    await emailjs.send(serviceId, config.templateId, params);
+
+    setProgress(1);
+    closeModal('nlm-modal');
+    showToast('📊 ファイルを送信しました！');
   } catch (err) {
     console.error(err);
     showToast('❌ 送信失敗: ' + (err.text || err.message || '不明なエラー'));
