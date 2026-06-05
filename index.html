@@ -862,7 +862,7 @@ header {
     <div class="modal-title"><span class="icon">📊</span>NLM ファイル送信</div>
 
     <div class="nlm-hint">
-      <strong>使い方：</strong> NotebookLMで生成したPPT・PDFをiPhoneの「ファイル」アプリに保存し、下のボタンから選択してください。iCloud Driveにあるファイルも選べます。
+      <strong>使い方：</strong> ファイルを選択して「送信する」を押すと、iOSの共有シートが開きます。「メール」を選ぶとファイルが自動添付された状態でメールアプリが起動します。
     </div>
 
     <div class="nlm-drop-area" id="nlm-drop-area">
@@ -1550,45 +1550,37 @@ async function sendNlmEmail() {
   const subject = document.getElementById('nlm-subject').value.trim() || 'NotebookLM 資料';
   const selected = [...nlmSelectedIndexes].map(i => nlmFiles[i]);
 
-  if (!to) { showToast('送信先メールを入力してください'); return; }
   if (selected.length === 0) { showToast('ファイルを選択してください'); return; }
-  if (!config.publicKey) { showToast('⚙️ EmailJS設定が必要です'); openSettings(); return; }
-
-  const serviceId = nlmActiveSender === 'gmail' ? config.gmailService : config.yahooService;
-  if (!serviceId) { showToast(`${nlmActiveSender === 'gmail' ? 'Gmail' : 'Yahoo'} のService IDが未設定です`); return; }
 
   const btn = document.getElementById('nlm-send-btn');
   const btnText = document.getElementById('nlm-send-btn-text');
   btn.disabled = true;
   btnText.innerHTML = '<span class="spinner"></span>';
-  setProgress(0.3);
 
   try {
-    const fileContents = await Promise.all(selected.map(f => fileToBase64(f)));
-    const params = {
-      to_email: to,
-      subject,
-      message: `NotebookLM 資料をお送りします。\n\n添付ファイル：\n${selected.map(f => '・' + f.name).join('\n')}`
-    };
-    fileContents.forEach((b64, i) => {
-      params[`attachment_${i+1}`] = b64;
-      params[`attachment_name_${i+1}`] = selected[i].name;
-    });
-    params.file_names = selected.map(f => f.name).join(', ');
-
-    emailjs.init({ publicKey: config.publicKey });
-    await emailjs.send(serviceId, config.templateId, params);
-
-    setProgress(1);
-    closeModal('nlm-modal');
-    showToast('📊 ファイルを送信しました！');
+    // Web Share API（iPhoneネイティブ共有シート）でファイル送信
+    if (navigator.canShare && navigator.canShare({ files: selected })) {
+      await navigator.share({
+        files: selected,
+        title: subject,
+        text: `${subject}\n送信先: ${to || '（メールアプリで入力してください）'}`
+      });
+      closeModal('nlm-modal');
+      showToast('📊 共有シートを開きました');
+    } else {
+      // フォールバック：mailto リンクでメールアプリを開く（ファイルなし）
+      const body = `NotebookLM 資料をお送りします。%0A%0A添付ファイル：%0A${selected.map(f => '・' + f.name).join('%0A')}%0A%0A※ファイルは手動で添付してください。`;
+      const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${body}`;
+      window.location.href = mailtoUrl;
+      showToast('メールアプリを開きました（ファイルを手動添付してください）');
+    }
   } catch (err) {
-    console.error(err);
-    showToast('❌ 送信失敗: ' + (err.text || err.message || '不明なエラー'));
+    if (err.name !== 'AbortError') {
+      showToast('❌ エラー: ' + err.message);
+    }
   } finally {
     btn.disabled = false;
     btnText.textContent = '送信する';
-    setTimeout(() => setProgress(0), 600);
   }
 }
 
