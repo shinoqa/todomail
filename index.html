@@ -617,6 +617,8 @@ header {
   white-space: nowrap;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.toast-error { background: rgba(180,30,30,0.95); border-color: rgba(239,68,68,0.5); color: #fff; }
+#toast.toast-success { background: rgba(16,100,70,0.95); border-color: rgba(16,185,129,0.5); color: #fff; }
 
 /* ── SENDER TOGGLE ── */
 .sender-toggle { display: flex; gap: 8px; }
@@ -1156,7 +1158,7 @@ function saveDefaultTo() {
   document.getElementById('send-to').value = val;
   updateEmailBanner();
   closeModal('email-setting-modal');
-  showToast('✅ 送信先を保存しました');
+  showToast('✅ 送信先を保存しました', 'success');
 }
 
 function initEmailJS() {
@@ -1296,7 +1298,7 @@ function addTodo() {
   save();
   closeModal('add-modal');
   render();
-  showToast('✅ Todo を追加しました');
+  showToast('✅ Todo を追加しました', 'success');
 }
 
 function openEditModal(e, id) {
@@ -1332,7 +1334,7 @@ function saveEdit() {
   save();
   closeModal('edit-modal');
   render();
-  showToast('✅ 保存しました');
+  showToast('✅ 保存しました', 'success');
 }
 
 function toggleDone(e, id) {
@@ -1435,13 +1437,13 @@ async function sendEmail() {
 
     setProgress(1);
     closeModal('send-modal');
-    showToast('📧 メールを送信しました！');
+    showToast('📧 メールを送信しました！', 'success');
     selectedIds.clear();
     attachedFiles = [];
     render();
   } catch (err) {
     console.error(err);
-    showToast('❌ 送信失敗: ' + (err.text || err.message || '不明なエラー'));
+    showToast('❌ 送信失敗: ' + (err.text || err.message || '不明なエラー'), 'error');
   } finally {
     btn.disabled = false;
     btnText.textContent = '送信する';
@@ -1560,24 +1562,28 @@ async function sendNlmEmail() {
   try {
     // Web Share API（iPhoneネイティブ共有シート）でファイル送信
     if (navigator.canShare && navigator.canShare({ files: selected })) {
-      await navigator.share({
-        files: selected,
-        title: subject,
-        text: `${subject}\n送信先: ${to || '（メールアプリで入力してください）'}`
-      });
-      closeModal('nlm-modal');
-      showToast('📊 共有シートを開きました');
-    } else {
-      // フォールバック：mailto リンクでメールアプリを開く（ファイルなし）
-      const body = `NotebookLM 資料をお送りします。%0A%0A添付ファイル：%0A${selected.map(f => '・' + f.name).join('%0A')}%0A%0A※ファイルは手動で添付してください。`;
-      const mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${body}`;
-      window.location.href = mailtoUrl;
-      showToast('メールアプリを開きました（ファイルを手動添付してください）');
+      try {
+        await navigator.share({
+          files: selected,
+          title: subject,
+          text: `${subject}\n送信先: ${to || '（メールアプリで入力してください）'}`
+        });
+        closeModal('nlm-modal');
+        showToast('📊 共有シートを開きました', 'success');
+        return;
+      } catch (shareErr) {
+        if (shareErr.name === 'AbortError') return; // ユーザーがキャンセル
+        // Permission denied等 → mailtoにフォールバック
+      }
     }
+    // フォールバック：mailtoでメールアプリを開く
+    const body = `NotebookLM 資料をお送りします。%0A%0A添付ファイル：%0A${selected.map(f => '・' + f.name).join('%0A')}%0A%0A※ファイルは手動で添付してください。`;
+    const mailtoUrl = `mailto:${encodeURIComponent(to || '')}?subject=${encodeURIComponent(subject)}&body=${body}`;
+    window.open(mailtoUrl, '_self');
+    closeModal('nlm-modal');
+    showToast('📧 メールアプリを開きました（ファイルを手動添付してください）', 'default');
   } catch (err) {
-    if (err.name !== 'AbortError') {
-      showToast('❌ エラー: ' + err.message);
-    }
+    showToast('❌ エラー: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
     btnText.textContent = '送信する';
@@ -1621,7 +1627,7 @@ function saveSettings() {
   localStorage.setItem('theme', currentTheme);
   initEmailJS();
   closeModal('settings-modal');
-  showToast('✅ 設定を保存しました');
+  showToast('✅ 設定を保存しました', 'success');
 }
 
 // ══════════════════════════════════════════════
@@ -1650,12 +1656,14 @@ document.getElementById('add-title').addEventListener('keydown', e => {
 });
 
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, type = 'default') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.classList.add('show');
+  el.className = 'show';
+  if (type === 'error') el.classList.add('toast-error');
+  else if (type === 'success') el.classList.add('toast-success');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2800);
 }
 
 function setProgress(v) {
