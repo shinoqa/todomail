@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TodoMail">
+<meta name="theme-color" content="#0d0f1a">
+<title>TodoMail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --bg-primary: #0d0f1a;
+  --bg-secondary: #141627;
+  --bg-card: rgba(255,255,255,0.05);
+  --bg-card-hover: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --border-active: rgba(99,102,241,0.5);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --accent-glow: rgba(99,102,241,0.3);
+  --work: #06b6d4;
+  --work-bg: rgba(6,182,212,0.15);
+  --private: #f59e0b;
+  --private-bg: rgba(245,158,11,0.15);
+  --danger: #ef4444;
+  --success: #10b981;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* ── THEME: Apple ── */
+[data-theme="apple"] {
+  --bg-primary: #f2f2f7;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255,255,255,0.85);
+  --bg-card-hover: rgba(255,255,255,0.98);
+  --border: rgba(0,0,0,0.1);
+  --border-active: rgba(0,122,255,0.5);
+  --text-primary: #000000;
+  --text-secondary: #3c3c43;
+  --text-muted: #8e8e93;
+  --accent: #007AFF;
+  --accent-2: #5856D6;
+  --accent-glow: rgba(0,122,255,0.2);
+  --work: #34C759;
+  --work-bg: rgba(52,199,89,0.12);
+  --private: #FF9500;
+  --private-bg: rgba(255,149,0,0.12);
+  --shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+[data-theme="apple"] body::before { display: none; }
+[data-theme="apple"] .modal { box-shadow: 0 -4px 30px rgba(0,0,0,0.12); }
+[data-theme="apple"] header h1 { background: linear-gradient(135deg,#007AFF,#5856D6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+/* ── THEME: Material ── */
+[data-theme="material"] {
+  --bg-primary: #FFFBFE;
+  --bg-secondary: #ffffff;
+  --bg-card: #F7F2FA;
+  --bg-card-hover: #EDE8F5;
+  --border: rgba(0,0,0,0.08);
+  --border-active: rgba(103,80,164,0.6);
+  --text-primary: #1C1B1F;
+  --text-secondary: #49454F;
+  --text-muted: #79747E;
+  --accent: #6750A4;
+  --accent-2: #9A82DB;
+  --accent-glow: rgba(103,80,164,0.2);
+  --work: #006874;
+  --work-bg: rgba(0,104,116,0.1);
+  --private: #B5460F;
+  --private-bg: rgba(181,70,15,0.1);
+  --shadow: 0 4px 16px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+[data-theme="material"] body::before { display: none; }
+[data-theme="material"] .todo-card { box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+[data-theme="material"] header h1 { background: linear-gradient(135deg,#6750A4,#006874); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+[data-theme="material"] .fab { border-radius: 16px; }
+[data-theme="material"] .btn-primary { border-radius: 20px; }
+
+/* ── THEME: Salesforce ── */
+[data-theme="salesforce"] {
+  --bg-primary: #F3F3F3;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #F4F6FE;
+  --border: #DDDBDA;
+  --border-active: #0176D3;
+  --text-primary: #181818;
+  --text-secondary: #444444;
+  --text-muted: #706E6B;
+  --accent: #0176D3;
+  --accent-2: #032D60;
+  --accent-glow: rgba(1,118,211,0.2);
+  --work: #2E844A;
+  --work-bg: rgba(46,132,74,0.1);
+  --private: #E07000;
+  --private-bg: rgba(224,112,0,0.1);
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --radius-sm: 4px;
+}
+[data-theme="salesforce"] body::before { display: none; }
+[data-theme="salesforce"] header h1 { background: linear-gradient(135deg,#0176D3,#032D60); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+[data-theme="salesforce"] .todo-card { border-left: none; border-left-width: 0; }
+[data-theme="salesforce"] .todo-card::before { width: 4px; }
+[data-theme="salesforce"] .fab { border-radius: 4px; }
+[data-theme="salesforce"] .btn-primary { border-radius: 4px; letter-spacing: 0.3px; }
+[data-theme="salesforce"] .tab.active { border-radius: 4px; }
+
+/* ── THEME SELECTOR ── */
+.theme-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.theme-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 6px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  background: var(--bg-card);
+}
+.theme-card.active { border-color: var(--accent); }
+.theme-card:active { transform: scale(0.95); }
+.theme-preview {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.theme-preview-dark  { background: linear-gradient(135deg,#0d0f1a,#6366f1); }
+.theme-preview-apple { background: linear-gradient(135deg,#f2f2f7,#007AFF); }
+.theme-preview-material { background: linear-gradient(135deg,#FFFBFE,#6750A4); }
+.theme-preview-salesforce { background: linear-gradient(135deg,#F3F3F3,#0176D3); }
+.theme-name { font-size: 10px; font-weight: 600; color: var(--text-secondary); line-height: 1.3; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ── GRADIENT BG ── */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── LAYOUT ── */
+#app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+
+/* ── HEADER ── */
+header {
+  padding: 56px 20px 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.header-left h1 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #a5b4fc, #e879f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+.header-left p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 18px;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.icon-btn:active { transform: scale(0.92); background: var(--bg-card-hover); }
+
+/* ── TABS ── */
+.tab-bar {
+  padding: 0 20px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tab {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  backdrop-filter: blur(8px);
+}
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.stat-card.work .num { color: var(--work); }
+.stat-card.private .num { color: var(--private); }
+.stat-card.total .num { background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ── TODO LIST ── */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  margin-bottom: 10px;
+}
+.list-header span { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+.select-all-btn { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 500; }
+
+.todo-list { padding: 0 20px; flex: 1; overflow-y: auto; }
+.todo-list::-webkit-scrollbar { width: 4px; }
+.todo-list::-webkit-scrollbar-track { background: transparent; }
+.todo-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  gap: 12px;
+}
+.empty-state .icon { font-size: 48px; opacity: 0.5; }
+.empty-state p { font-size: 14px; text-align: center; line-height: 1.6; }
+
+/* ── TODO CARD ── */
+.todo-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+.todo-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+}
+.todo-card.work::before { background: var(--work); }
+.todo-card.private::before { background: var(--private); }
+.todo-card.selected {
+  border-color: var(--border-active);
+  background: rgba(99,102,241,0.08);
+}
+.todo-card:active { transform: scale(0.98); }
+
+.todo-check {
+  width: 22px; height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.2s;
+}
+.todo-card.selected .todo-check {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+}
+.todo-check svg { display: none; }
+.todo-card.selected .todo-check svg { display: block; }
+
+.todo-content { flex: 1; min-width: 0; }
+.todo-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.todo-card.done .todo-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.todo-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge.work { background: var(--work-bg); color: var(--work); }
+.badge.private { background: var(--private-bg); color: var(--private); }
+.todo-date { font-size: 11px; color: var(--text-muted); }
+.todo-notes { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+
+.todo-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.todo-action-btn {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.todo-action-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.todo-action-btn.delete:hover { color: var(--danger); }
+
+/* ── FAB ── */
+.fab-container {
+  position: fixed;
+  bottom: 32px;
+  right: calc(50% - 220px);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 100;
+}
+@media (max-width: 480px) {
+  .fab-container { right: 20px; }
+}
+
+.fab {
+  width: 56px; height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--accent-glow);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.fab:active { transform: scale(0.9); }
+
+.send-fab {
+  display: none;
+  padding: 0 20px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(6,182,212,0.3);
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+}
+.send-fab.visible { display: flex; }
+.send-fab:active { transform: scale(0.95); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 24px 40px;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.modal::-webkit-scrollbar { display: none; }
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-title .icon { font-size: 22px; }
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-textarea { resize: none; height: 80px; line-height: 1.5; }
+.form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; cursor: pointer; }
+.form-select option { background: #1e2235; }
+
+.category-selector { display: flex; gap: 10px; }
+.cat-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.cat-btn .cat-icon { font-size: 20px; }
+.cat-btn.active.work { background: var(--work-bg); border-color: var(--work); color: var(--work); }
+.cat-btn.active.private { background: var(--private-bg); border-color: var(--private); color: var(--private); }
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 10px; margin-top: 20px; }
+.btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.btn:active { transform: scale(0.97); }
+.btn-ghost { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 4px 16px var(--accent-glow); }
+.btn-send { background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: #fff; box-shadow: 0 4px 16px rgba(6,182,212,0.25); }
+
+/* ── FILE ATTACH ── */
+.file-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.file-area:hover { border-color: var(--border-active); background: rgba(99,102,241,0.04); }
+.file-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.file-area .file-icon { font-size: 28px; margin-bottom: 6px; }
+.file-area p { font-size: 13px; color: var(--text-muted); }
+.file-area span { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; }
+
+.attached-files { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.file-chip .file-type { font-size: 16px; }
+.file-chip .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-chip .remove-file { color: var(--text-muted); cursor: pointer; font-size: 16px; flex-shrink: 0; }
+
+/* ── EMAIL PREVIEW ── */
+.email-preview {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 150px;
+  overflow-y: auto;
+}
+.preview-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+
+/* ── SETTINGS ── */
+.settings-section { margin-bottom: 24px; }
+.settings-section-title { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+.settings-info {
+  background: rgba(99,102,241,0.08);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.settings-info a { color: var(--accent); text-decoration: none; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(30,35,55,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  z-index: 500;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34,1.2,0.64,1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SENDER TOGGLE ── */
+.sender-toggle { display: flex; gap: 8px; }
+.sender-btn {
+  flex: 1;
+  padding: 11px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.sender-btn.active { border-color: var(--border-active); background: rgba(99,102,241,0.1); color: var(--text-primary); }
+
+/* ── LOADING SPINNER ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ── EMAIL BANNER ── */
+.email-banner {
+  margin: 0 20px 16px;
+}
+.email-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.email-banner-inner:active { background: var(--bg-card-hover); }
+.email-banner-icon { font-size: 15px; flex-shrink: 0; }
+.email-banner-text { flex: 1; font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.email-banner-edit { font-size: 12px; color: var(--accent); font-weight: 600; flex-shrink: 0; }
+
+/* ── PROGRESS BAR (top) ── */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s;
+  z-index: 999;
+}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <h1>✉ TodoMail</h1>
+      <p id="header-date"></p>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="settings-btn" title="設定">⚙️</button>
+    </div>
+  </header>
+
+  <!-- 送信先メール表示バナー -->
+  <div class="email-banner" id="email-banner">
+    <div class="email-banner-inner" id="email-banner-inner">
+      <span class="email-banner-icon">📧</span>
+      <span class="email-banner-text" id="email-banner-text">送信先メールを設定してください</span>
+      <span class="email-banner-edit">編集 ›</span>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card total">
+      <div class="num" id="stat-total">0</div>
+      <div class="label">すべて</div>
+    </div>
+    <div class="stat-card work">
+      <div class="num" id="stat-work">0</div>
+      <div class="label">仕事</div>
+    </div>
+    <div class="stat-card private">
+      <div class="num" id="stat-private">0</div>
+      <div class="label">プライベート</div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" data-filter="all" onclick="setFilter('all',this)">すべて</div>
+    <div class="tab" data-filter="work" onclick="setFilter('work',this)">💼 仕事</div>
+    <div class="tab" data-filter="private" onclick="setFilter('private',this)">🏠 プライベート</div>
+    <div class="tab" data-filter="done" onclick="setFilter('done',this)">✅ 完了</div>
+  </div>
+
+  <div class="list-header">
+    <span id="list-count">0 件</span>
+    <span class="select-all-btn" onclick="toggleSelectAll()">すべて選択</span>
+  </div>
+
+  <div class="todo-list" id="todo-list"></div>
+
+  <div style="height: 100px;"></div>
+</div>
+
+<!-- FAB -->
+<div class="fab-container">
+  <button class="fab" onclick="openAddModal()" title="追加">＋</button>
+  <button class="send-fab" id="send-fab" onclick="openSendModal()">
+    <span>📤</span>
+    <span id="send-fab-label">送信</span>
+  </button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ===== ADD TODO MODAL ===== -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span class="icon">📝</span>Todo を追加</div>
+
+    <div class="form-group">
+      <label class="form-label">タイトル *</label>
+      <input class="form-input" id="add-title" type="text" placeholder="何をする？" maxlength="200">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <div class="category-selector">
+        <div class="cat-btn work active" id="cat-work" onclick="setCategory('work')">
+          <span class="cat-icon">💼</span>仕事
+        </div>
+        <div class="cat-btn private" id="cat-private" onclick="setCategory('private')">
+          <span class="cat-icon">🏠</span>プライベート
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">メモ（任意）</label>
+      <textarea class="form-textarea" id="add-notes" placeholder="詳細や補足情報…"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('add-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="addTodo()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EMAIL SETTING MODAL ===== -->
+<div class="modal-overlay" id="email-setting-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span class="icon">📧</span>送信先メールを設定</div>
+    <div class="form-group">
+      <label class="form-label">デフォルト送信先アドレス</label>
+      <input class="form-input" id="default-to-input" type="email" placeholder="recipient@example.com">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('email-setting-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveDefaultTo()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT TODO MODAL ===== -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span class="icon">✏️</span>Todo を編集</div>
+
+    <input type="hidden" id="edit-id">
+
+    <div class="form-group">
+      <label class="form-label">タイトル *</label>
+      <input class="form-input" id="edit-title" type="text" placeholder="何をする？" maxlength="200">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <div class="category-selector">
+        <div class="cat-btn work" id="edit-cat-work" onclick="setEditCategory('work')">
+          <span class="cat-icon">💼</span>仕事
+        </div>
+        <div class="cat-btn private" id="edit-cat-private" onclick="setEditCategory('private')">
+          <span class="cat-icon">🏠</span>プライベート
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">メモ（任意）</label>
+      <textarea class="form-textarea" id="edit-notes" placeholder="詳細や補足情報…"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('edit-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEND MODAL ===== -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span class="icon">📤</span>メールで送信</div>
+
+    <div class="form-group">
+      <label class="form-label">送信先メールアドレス</label>
+      <input class="form-input" id="send-to" type="email" placeholder="recipient@example.com">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">件名</label>
+      <input class="form-input" id="send-subject" type="text" placeholder="TodoMail - タスクリスト">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">送信元アカウント</label>
+      <div class="sender-toggle">
+        <button class="sender-btn active" id="sender-gmail" onclick="setSender('gmail')">
+          <span>📧</span> Gmail
+        </button>
+        <button class="sender-btn" id="sender-yahoo" onclick="setSender('yahoo')">
+          <span>📬</span> Yahoo
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ファイルを添付（PDF / PPT）</label>
+      <div class="file-area" id="file-drop-area">
+        <input type="file" id="file-input" accept=".pdf,.ppt,.pptx" multiple onchange="handleFiles(this.files)">
+        <div class="file-icon">📎</div>
+        <p>タップしてファイルを選択</p>
+        <span>PDF・PPT・PPTX 対応</span>
+      </div>
+      <div class="attached-files" id="attached-files"></div>
+    </div>
+
+    <div class="form-group">
+      <div class="preview-label">メール本文プレビュー</div>
+      <div class="email-preview" id="email-preview"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('send-modal')">キャンセル</button>
+      <button class="btn btn-send" id="send-btn" onclick="sendEmail()">
+        <span id="send-btn-text">送信する</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title"><span class="icon">⚙️</span>設定</div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">EmailJS 設定</div>
+      <div class="settings-info">
+        EmailJS を使うと、バックエンド不要でメール送信できます。<br>
+        1. <a href="https://www.emailjs.com" target="_blank">emailjs.com</a> でアカウント作成（無料）<br>
+        2. Gmail / Yahoo のサービスを追加<br>
+        3. メールテンプレートを作成（変数: <code>to_email</code>, <code>subject</code>, <code>message</code>）<br>
+        4. Public Key / Service ID / Template ID を入力
+      </div>
+      <div class="form-group">
+        <label class="form-label">Public Key</label>
+        <input class="form-input" id="cfg-public-key" type="text" placeholder="xxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gmail — Service ID</label>
+        <input class="form-input" id="cfg-gmail-service" type="text" placeholder="service_xxxxxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Yahoo — Service ID</label>
+        <input class="form-input" id="cfg-yahoo-service" type="text" placeholder="service_xxxxxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Template ID</label>
+        <input class="form-input" id="cfg-template" type="text" placeholder="template_xxxxxxx">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">デフォルト設定</div>
+      <div class="form-group">
+        <label class="form-label">デフォルト送信先</label>
+        <input class="form-input" id="cfg-default-to" type="email" placeholder="your@email.com">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">デザインテーマ</div>
+      <div class="theme-grid">
+        <div class="theme-card" data-theme-val="dark" onclick="previewTheme('dark')">
+          <div class="theme-preview theme-preview-dark"></div>
+          <div class="theme-name">ダーク<br>モダン</div>
+        </div>
+        <div class="theme-card" data-theme-val="apple" onclick="previewTheme('apple')">
+          <div class="theme-preview theme-preview-apple"></div>
+          <div class="theme-name">Apple<br>風</div>
+        </div>
+        <div class="theme-card" data-theme-val="material" onclick="previewTheme('material')">
+          <div class="theme-preview theme-preview-material"></div>
+          <div class="theme-name">Material<br>Design</div>
+        </div>
+        <div class="theme-card" data-theme-val="salesforce" onclick="previewTheme('salesforce')">
+          <div class="theme-preview theme-preview-salesforce"></div>
+          <div class="theme-name">Sales-<br>force</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('settings-modal')">閉じる</button>
+      <button class="btn btn-primary" onclick="saveSettings()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let currentTheme = localStorage.getItem('theme') || 'dark';
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  if (theme === 'dark') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  document.querySelectorAll('.theme-card').forEach(el => {
+    el.classList.toggle('active', el.dataset.themeVal === theme);
+  });
+}
+
+function previewTheme(theme) {
+  applyTheme(theme);
+}
+
+let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+let config = JSON.parse(localStorage.getItem('config') || JSON.stringify({
+  publicKey: 'NTlpBYRQFtkgqDsqg',
+  gmailService: 'service_19w0pnz',
+  yahooService: '',
+  templateId: 'template_u5pnfxq',
+  defaultTo: ''
+}));
+let filter = 'all';
+let selectedIds = new Set();
+let addCategory = 'work';
+let activeSender = 'gmail';
+let attachedFiles = [];
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(currentTheme);
+  updateHeaderDate();
+  render();
+  initEmailJS();
+  loadSettingsForm();
+  updateEmailBanner();
+  document.getElementById('send-to').value = config.defaultTo || '';
+  document.getElementById('send-subject').value = 'TodoMail - タスクリスト';
+
+  // ⚙️ settings button
+  document.getElementById('settings-btn').addEventListener('click', openSettings);
+
+  // email banner
+  document.getElementById('email-banner-inner').addEventListener('click', openEmailSetting);
+});
+
+function updateEmailBanner() {
+  const el = document.getElementById('email-banner-text');
+  el.textContent = config.defaultTo || '送信先メールを設定してください';
+  el.style.color = config.defaultTo ? 'var(--text-primary)' : 'var(--text-muted)';
+}
+
+function openEmailSetting() {
+  document.getElementById('default-to-input').value = config.defaultTo || '';
+  openModal('email-setting-modal');
+  setTimeout(() => document.getElementById('default-to-input').focus(), 300);
+}
+
+function saveDefaultTo() {
+  const val = document.getElementById('default-to-input').value.trim();
+  config.defaultTo = val;
+  localStorage.setItem('config', JSON.stringify(config));
+  document.getElementById('send-to').value = val;
+  updateEmailBanner();
+  closeModal('email-setting-modal');
+  showToast('✅ 送信先を保存しました');
+}
+
+function initEmailJS() {
+  if (config.publicKey) {
+    emailjs.init({ publicKey: config.publicKey });
+  }
+}
+
+function updateHeaderDate() {
+  const d = new Date();
+  const opts = { month: 'long', day: 'numeric', weekday: 'short' };
+  document.getElementById('header-date').textContent = d.toLocaleDateString('ja-JP', opts);
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function render() {
+  const filtered = getFiltered();
+  const list = document.getElementById('todo-list');
+
+  // Stats
+  const active = todos.filter(t => !t.done);
+  document.getElementById('stat-total').textContent = active.length;
+  document.getElementById('stat-work').textContent = active.filter(t => t.category === 'work').length;
+  document.getElementById('stat-private').textContent = active.filter(t => t.category === 'private').length;
+  document.getElementById('list-count').textContent = `${filtered.length} 件`;
+
+  // Send FAB
+  const selCount = selectedIds.size;
+  const fab = document.getElementById('send-fab');
+  fab.classList.toggle('visible', selCount > 0);
+  document.getElementById('send-fab-label').textContent = `${selCount} 件を送信`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <p>Todoがありません<br>＋ボタンで追加しましょう</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(t => {
+    const sel = selectedIds.has(t.id);
+    const dateStr = new Date(t.createdAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+    return `
+    <div class="todo-card ${t.category} ${sel ? 'selected' : ''} ${t.done ? 'done' : ''}" onclick="toggleSelect('${t.id}')">
+      <div class="todo-check">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="todo-content">
+        <div class="todo-title">${escHtml(t.title)}</div>
+        ${t.notes ? `<div class="todo-notes">${escHtml(t.notes)}</div>` : ''}
+        <div class="todo-meta">
+          <span class="badge ${t.category}">${t.category === 'work' ? '💼 仕事' : '🏠 プライベート'}</span>
+          <span class="todo-date">${dateStr}</span>
+        </div>
+      </div>
+      <div class="todo-actions">
+        <button class="todo-action-btn" onclick="openEditModal(event,'${t.id}')" title="編集">✏️</button>
+        <button class="todo-action-btn" onclick="toggleDone(event,'${t.id}')" title="${t.done ? '未完了に戻す' : '完了にする'}">${t.done ? '↩️' : '✅'}</button>
+        <button class="todo-action-btn delete" onclick="deleteTodo(event,'${t.id}')" title="削除">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getFiltered() {
+  if (filter === 'all') return todos.filter(t => !t.done);
+  if (filter === 'done') return todos.filter(t => t.done);
+  return todos.filter(t => t.category === filter && !t.done);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════
+//  FILTER / SELECT
+// ══════════════════════════════════════════════
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  selectedIds.clear();
+  render();
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  render();
+}
+
+function toggleSelectAll() {
+  const filtered = getFiltered();
+  if (selectedIds.size === filtered.length) {
+    selectedIds.clear();
+  } else {
+    filtered.forEach(t => selectedIds.add(t.id));
+  }
+  render();
+}
+
+// ══════════════════════════════════════════════
+//  ADD TODO
+// ══════════════════════════════════════════════
+function openAddModal() {
+  document.getElementById('add-title').value = '';
+  document.getElementById('add-notes').value = '';
+  setCategory('work');
+  openModal('add-modal');
+  setTimeout(() => document.getElementById('add-title').focus(), 300);
+}
+
+function setCategory(cat) {
+  addCategory = cat;
+  document.getElementById('cat-work').classList.toggle('active', cat === 'work');
+  document.getElementById('cat-private').classList.toggle('active', cat === 'private');
+}
+
+function addTodo() {
+  const title = document.getElementById('add-title').value.trim();
+  if (!title) { showToast('タイトルを入力してください'); return; }
+  const todo = {
+    id: Date.now().toString(),
+    title,
+    notes: document.getElementById('add-notes').value.trim(),
+    category: addCategory,
+    done: false,
+    createdAt: Date.now()
+  };
+  todos.unshift(todo);
+  save();
+  closeModal('add-modal');
+  render();
+  showToast('✅ Todo を追加しました');
+}
+
+function openEditModal(e, id) {
+  e.stopPropagation();
+  const t = todos.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('edit-id').value = t.id;
+  document.getElementById('edit-title').value = t.title;
+  document.getElementById('edit-notes').value = t.notes || '';
+  setEditCategory(t.category);
+  openModal('edit-modal');
+  setTimeout(() => document.getElementById('edit-title').focus(), 300);
+}
+
+function setEditCategory(cat) {
+  document.getElementById('edit-cat-work').classList.toggle('active', cat === 'work');
+  document.getElementById('edit-cat-private').classList.toggle('active', cat === 'private');
+  document.getElementById('edit-cat-work').className = `cat-btn work${cat === 'work' ? ' active' : ''}`;
+  document.getElementById('edit-cat-private').className = `cat-btn private${cat === 'private' ? ' active' : ''}`;
+  document.getElementById('edit-id').dataset.category = cat;
+}
+
+function saveEdit() {
+  const id = document.getElementById('edit-id').value;
+  const title = document.getElementById('edit-title').value.trim();
+  if (!title) { showToast('タイトルを入力してください'); return; }
+  const cat = document.getElementById('edit-id').dataset.category || 'work';
+  const t = todos.find(t => t.id === id);
+  if (!t) return;
+  t.title = title;
+  t.notes = document.getElementById('edit-notes').value.trim();
+  t.category = cat;
+  save();
+  closeModal('edit-modal');
+  render();
+  showToast('✅ 保存しました');
+}
+
+function toggleDone(e, id) {
+  e.stopPropagation();
+  const t = todos.find(t => t.id === id);
+  if (t) { t.done = !t.done; save(); render(); }
+}
+
+function deleteTodo(e, id) {
+  e.stopPropagation();
+  todos = todos.filter(t => t.id !== id);
+  selectedIds.delete(id);
+  save();
+  render();
+  showToast('🗑 削除しました');
+}
+
+// ══════════════════════════════════════════════
+//  SEND MODAL
+// ══════════════════════════════════════════════
+function openSendModal() {
+  const sel = todos.filter(t => selectedIds.has(t.id));
+  if (!sel.length) { showToast('Todoを選択してください'); return; }
+  document.getElementById('send-to').value = config.defaultTo || '';
+  attachedFiles = [];
+  renderAttachedFiles();
+  updateEmailPreview();
+  openModal('send-modal');
+}
+
+function setSender(sender) {
+  activeSender = sender;
+  document.getElementById('sender-gmail').classList.toggle('active', sender === 'gmail');
+  document.getElementById('sender-yahoo').classList.toggle('active', sender === 'yahoo');
+}
+
+function handleFiles(files) {
+  for (const f of files) attachedFiles.push(f);
+  renderAttachedFiles();
+}
+
+function renderAttachedFiles() {
+  const container = document.getElementById('attached-files');
+  container.innerHTML = attachedFiles.map((f, i) => `
+    <div class="file-chip">
+      <span class="file-type">${f.name.endsWith('.pdf') ? '📄' : '📊'}</span>
+      <span class="file-name">${escHtml(f.name)}</span>
+      <span class="remove-file" onclick="removeFile(${i})">✕</span>
+    </div>`).join('');
+}
+
+function removeFile(i) {
+  attachedFiles.splice(i, 1);
+  renderAttachedFiles();
+}
+
+function updateEmailPreview() {
+  const sel = todos.filter(t => selectedIds.has(t.id));
+  const lines = sel.map((t, i) => {
+    const cat = t.category === 'work' ? '[仕事]' : '[プライベート]';
+    return `${i+1}. ${cat} ${t.title}${t.notes ? '\n   ' + t.notes : ''}`;
+  });
+  const d = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+  const body = `TodoMail からの送信 (${d})\n\n${lines.join('\n\n')}`;
+  document.getElementById('email-preview').textContent = body;
+}
+
+async function sendEmail() {
+  const to = document.getElementById('send-to').value.trim();
+  const subject = document.getElementById('send-subject').value.trim() || 'TodoMail - タスクリスト';
+
+  if (!to) { showToast('送信先メールを入力してください'); return; }
+  if (!config.publicKey) { showToast('⚙️ まず設定でEmailJSを設定してください'); openSettings(); return; }
+
+  const serviceId = activeSender === 'gmail' ? config.gmailService : config.yahooService;
+  if (!serviceId) { showToast(`${activeSender === 'gmail' ? 'Gmail' : 'Yahoo'} の Service ID が設定されていません`); return; }
+
+  const btn = document.getElementById('send-btn');
+  const btnText = document.getElementById('send-btn-text');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span>';
+  setProgress(0.3);
+
+  try {
+    const message = document.getElementById('email-preview').textContent;
+    const params = { to_email: to, subject, message };
+
+    // ファイルがある場合はBase64で添付
+    if (attachedFiles.length > 0) {
+      const fileContents = await Promise.all(attachedFiles.map(f => fileToBase64(f)));
+      fileContents.forEach((b64, i) => {
+        params[`attachment_${i+1}`] = b64;
+        params[`attachment_name_${i+1}`] = attachedFiles[i].name;
+      });
+      params.file_names = attachedFiles.map(f => f.name).join(', ');
+    }
+
+    emailjs.init({ publicKey: config.publicKey });
+    await emailjs.send(serviceId, config.templateId, params);
+
+    setProgress(1);
+    closeModal('send-modal');
+    showToast('📧 メールを送信しました！');
+    selectedIds.clear();
+    attachedFiles = [];
+    render();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ 送信失敗: ' + (err.text || err.message || '不明なエラー'));
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '送信する';
+    setTimeout(() => setProgress(0), 600);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+function openSettings() {
+  loadSettingsForm();
+  openModal('settings-modal');
+}
+
+function loadSettingsForm() {
+  document.getElementById('cfg-public-key').value = config.publicKey || '';
+  document.getElementById('cfg-gmail-service').value = config.gmailService || '';
+  document.getElementById('cfg-yahoo-service').value = config.yahooService || '';
+  document.getElementById('cfg-template').value = config.templateId || '';
+  document.getElementById('cfg-default-to').value = config.defaultTo || '';
+}
+
+function saveSettings() {
+  config = {
+    publicKey: document.getElementById('cfg-public-key').value.trim(),
+    gmailService: document.getElementById('cfg-gmail-service').value.trim(),
+    yahooService: document.getElementById('cfg-yahoo-service').value.trim(),
+    templateId: document.getElementById('cfg-template').value.trim(),
+    defaultTo: document.getElementById('cfg-default-to').value.trim()
+  };
+  localStorage.setItem('config', JSON.stringify(config));
+  localStorage.setItem('theme', currentTheme);
+  initEmailJS();
+  closeModal('settings-modal');
+  showToast('✅ 設定を保存しました');
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function save() { localStorage.setItem('todos', JSON.stringify(todos)); }
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) closeModal(ov.id); });
+});
+
+// Enter key in add form
+document.getElementById('add-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTodo();
+});
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function setProgress(v) {
+  document.getElementById('progress-bar').style.transform = `scaleX(${v})`;
+}
+</script>
+</body>
+</html>
