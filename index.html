@@ -864,7 +864,7 @@ header {
     <div class="modal-title"><span class="icon">📊</span>NLM ファイル送信</div>
 
     <div class="nlm-hint">
-      <strong>使い方：</strong> ファイルを選択して「送信する」を押すと、iOSの共有シートが開きます。「メール」を選ぶとファイルが自動添付された状態でメールアプリが起動します。
+      <strong>使い方：</strong> iPhoneの「ファイル」アプリに保存したPPT・PDFを選択して送信ボタンを押すと、<strong>Gmailから直接</strong>添付ファイル付きメールが送られます。
     </div>
 
     <div class="nlm-drop-area" id="nlm-drop-area">
@@ -1106,13 +1106,15 @@ function previewTheme(theme) {
 }
 
 let todos = JSON.parse(localStorage.getItem('todos') || '[]');
-let config = JSON.parse(localStorage.getItem('config') || JSON.stringify({
+const DEFAULT_CONFIG = {
   publicKey: 'NTlpBYRQFtkgqDsqg',
   gmailService: 'service_19w0pnz',
   yahooService: '',
   templateId: 'template_u5pnfxq',
-  defaultTo: ''
-}));
+  defaultTo: '',
+  gasUrl: 'https://script.google.com/macros/s/AKfycbwBxTzmTsmdW6yXtl1OKQQtHVZZIevDs7ez3sTezCageSnPeDRLlvYQ3Wp7p-_UcoJR/exec'
+};
+let config = Object.assign({}, DEFAULT_CONFIG, JSON.parse(localStorage.getItem('config') || '{}'));
 let filter = 'all';
 let selectedIds = new Set();
 let addCategory = 'work';
@@ -1560,28 +1562,37 @@ async function sendNlmEmail() {
   btnText.innerHTML = '<span class="spinner"></span>';
 
   try {
-    // Web Share API（iPhoneネイティブ共有シート）でファイル送信
-    if (navigator.canShare && navigator.canShare({ files: selected })) {
-      try {
-        await navigator.share({
-          files: selected,
-          title: subject,
-          text: `${subject}\n送信先: ${to || '（メールアプリで入力してください）'}`
-        });
-        closeModal('nlm-modal');
-        showToast('📊 共有シートを開きました', 'success');
-        return;
-      } catch (shareErr) {
-        if (shareErr.name === 'AbortError') return; // ユーザーがキャンセル
-        // Permission denied等 → mailtoにフォールバック
-      }
+    if (!config.gasUrl) {
+      showToast('⚙️ GAS URLが設定されていません', 'error');
+      return;
     }
-    // フォールバック：mailtoでメールアプリを開く
-    const body = `NotebookLM 資料をお送りします。%0A%0A添付ファイル：%0A${selected.map(f => '・' + f.name).join('%0A')}%0A%0A※ファイルは手動で添付してください。`;
-    const mailtoUrl = `mailto:${encodeURIComponent(to || '')}?subject=${encodeURIComponent(subject)}&body=${body}`;
-    window.open(mailtoUrl, '_self');
-    closeModal('nlm-modal');
-    showToast('📧 メールアプリを開きました（ファイルを手動添付してください）', 'default');
+
+    // ファイルをBase64に変換
+    const filesData = await Promise.all(selected.map(async f => ({
+      name: f.name,
+      base64: await fileToBase64(f),
+      mimeType: f.type || 'application/octet-stream'
+    })));
+
+    const payload = {
+      to: to,
+      subject: subject,
+      message: `NotebookLM 資料をお送りします。\n\n添付ファイル：\n${selected.map(f => '・' + f.name).join('\n')}`,
+      files: filesData
+    };
+
+    const res = await fetch(config.gasUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.status === 'ok') {
+      closeModal('nlm-modal');
+      showToast('📧 Gmailで送信しました！', 'success');
+    } else {
+      showToast('❌ 送信失敗: ' + result.message, 'error');
+    }
   } catch (err) {
     showToast('❌ エラー: ' + err.message, 'error');
   } finally {
