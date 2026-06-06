@@ -1085,6 +1085,19 @@ header {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">データバックアップ</div>
+      <div class="settings-info">
+        PWAを削除・再インストールするとTodoデータが消えます。定期的にバックアップを保存してください。復元時はバックアップファイルを選択してください。
+      </div>
+      <div class="btn-row" style="margin-top:0;">
+        <button class="btn btn-ghost" onclick="exportBackup()" style="flex:1;">⬇️ バックアップ保存</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()" style="flex:1;">⬆️ 復元する</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importBackup(this)">
+      <div id="backup-info" style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;"></div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">デザインテーマ</div>
       <div class="theme-grid">
         <div class="theme-card" data-theme-val="dark" onclick="previewTheme('dark')">
@@ -1664,6 +1677,7 @@ function fileToBase64(file) {
 // ══════════════════════════════════════════════
 function openSettings() {
   loadSettingsForm();
+  updateBackupInfo();
   openModal('settings-modal');
 }
 
@@ -1693,6 +1707,68 @@ function saveSettings() {
 // ══════════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  BACKUP / RESTORE
+// ══════════════════════════════════════════════
+function exportBackup() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    todos: todos,
+    config: config
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const d = new Date().toISOString().slice(0,10);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `todomail_backup_${d}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('⬇️ バックアップを保存しました', 'success');
+  localStorage.setItem('lastBackup', new Date().toISOString());
+  updateBackupInfo();
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.todos) throw new Error('無効なファイルです');
+      const count = data.todos.length;
+      todos = data.todos;
+      if (data.config) {
+        config = Object.assign({}, DEFAULT_CONFIG, data.config);
+        localStorage.setItem('config', JSON.stringify(config));
+      }
+      save();
+      render();
+      closeModal('settings-modal');
+      showToast(`✅ ${count}件のTodoを復元しました`, 'success');
+    } catch (err) {
+      showToast('❌ 復元失敗: ' + err.message, 'error');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function updateBackupInfo() {
+  const el = document.getElementById('backup-info');
+  if (!el) return;
+  const last = localStorage.getItem('lastBackup');
+  if (last) {
+    const d = new Date(last).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    el.textContent = `最終バックアップ: ${d}`;
+  } else {
+    el.textContent = 'バックアップがまだありません';
+  }
+}
+
 function save() { localStorage.setItem('todos', JSON.stringify(todos)); }
 
 function openModal(id) {
